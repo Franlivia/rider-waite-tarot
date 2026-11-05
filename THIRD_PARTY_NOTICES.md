@@ -4,6 +4,10 @@ The MIT license in this repository applies to original project code, templates,
 and documentation. It does not relicense the historical tarot images in
 `assets/artwork/*.webp`.
 
+The screenshots and recorded animation in `docs/media/` show the same historical
+artwork inside the project's interface. The artwork credits and source-status
+statements below apply to those depictions as well.
+
 ## Rider–Waite–Smith, 1909 Roses & Lilies
 
 - **Face artwork:** Pamela Colman Smith (1878–1951), published in 1909.

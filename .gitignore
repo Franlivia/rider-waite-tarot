@@ -17,6 +17,8 @@ venv/
 /tarot/
 /visualizations/
 /dist/
+/output/
+/.playwright-cli/
 *.lock
 *.json.lock
 *.html
