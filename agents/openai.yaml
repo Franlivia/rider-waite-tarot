@@ -1,0 +1,4 @@
+interface:
+  display_name: "维特塔罗·隐私抽牌"
+  short_description: "只说问题方向，点选真实维特牌背、动画翻牌，以建议为主解读并支持补牌澄清"
+  default_prompt: "使用 $rider-waite-tarot，让整副牌洗好后铺开供我点选，翻牌后重点给出建议，解读结束询问是否需要补牌澄清。"

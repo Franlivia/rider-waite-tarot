@@ -1,0 +1,25 @@
+# Local system and Python caches
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Credentials and local overrides
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Private sessions and generated card tables
+/sessions/
+/tarot/
+/visualizations/
+/dist/
+*.lock
+*.json.lock
+*.html
+!/assets/card-table.html
+*.json
+!/assets/artwork/sources.json

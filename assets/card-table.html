@@ -1,0 +1,286 @@
+<section id="tarot-table-__BOARD_ID__" data-phase="loading" aria-label="维特塔罗抽牌桌">
+  <style>
+    #tarot-table-__BOARD_ID__ { display: grid; gap: calc(var(--font-size-base) * 1); color: var(--foreground); }
+    #tarot-table-__BOARD_ID__ .tarot-heading { display: grid; gap: calc(var(--font-size-base) * .25); padding-inline-end: 90px; }
+    #tarot-table-__BOARD_ID__ .tarot-theme { display: grid; gap: calc(var(--font-size-base) * .25); }
+    #tarot-table-__BOARD_ID__ .tarot-grid { display: grid; grid-template-columns: repeat(13, minmax(0, 1fr)); gap: 8px; isolation: isolate; }
+    #tarot-table-__BOARD_ID__ .tarot-grid[data-stage="waiting"] { visibility: hidden; }
+    #tarot-table-__BOARD_ID__ .tarot-card { position: relative; width: 100%; min-width: 0; aspect-ratio: 3 / 5; padding: 0; border: 1px solid var(--border); border-radius: 4px; background: var(--card); color: var(--foreground); transform-origin: center; }
+    #tarot-table-__BOARD_ID__ .tarot-card img { display: block; width: 100%; height: 100%; object-fit: fill; border-radius: 3px; pointer-events: none; }
+    #tarot-table-__BOARD_ID__ .tarot-card[aria-pressed="true"] { transform: translateY(-5px); box-shadow: 0 0 0 2px var(--primary); }
+    #tarot-table-__BOARD_ID__ .tarot-card:disabled { cursor: default; }
+    #tarot-table-__BOARD_ID__ .tarot-card[data-used="true"] { opacity: .18; }
+    #tarot-table-__BOARD_ID__ .tarot-actions { display: flex; flex-wrap: wrap; align-items: center; gap: calc(var(--font-size-base) * .5); }
+    #tarot-table-__BOARD_ID__ .tarot-gallery { display: flex; justify-content: center; flex-wrap: wrap; gap: 20px 16px; }
+    #tarot-table-__BOARD_ID__ .tarot-reveal-card { flex: 0 1 180px; width: 180px; max-width: calc(50% - 8px); margin: 0; display: grid; align-content: start; gap: 8px; }
+    #tarot-table-__BOARD_ID__ .tarot-flip { width: 100%; aspect-ratio: 3 / 5; perspective: 900px; }
+    #tarot-table-__BOARD_ID__ .tarot-flip-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 650ms cubic-bezier(.2,.65,.25,1); }
+    #tarot-table-__BOARD_ID__ .tarot-flip-inner.is-flipped { transform: rotateY(180deg); }
+    #tarot-table-__BOARD_ID__ .tarot-face { position: absolute; inset: 0; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 5px; object-fit: fill; }
+    #tarot-table-__BOARD_ID__ .tarot-front { transform: rotateY(180deg); }
+    #tarot-table-__BOARD_ID__ .tarot-front.is-reversed { transform: rotateY(180deg) rotate(180deg); }
+    #tarot-table-__BOARD_ID__ figcaption { display: grid; gap: 2px; text-align: center; overflow-wrap: anywhere; }
+    #tarot-table-__BOARD_ID__ .tarot-prior { display: grid; gap: calc(var(--font-size-base) * .5); }
+    #tarot-table-__BOARD_ID__ .tarot-prior .tarot-gallery { justify-content: start; gap: 12px; }
+    #tarot-table-__BOARD_ID__ .tarot-prior .tarot-reveal-card { flex-basis: 64px; width: 64px; max-width: 64px; }
+    #tarot-table-__BOARD_ID__ .tarot-fallback { display: grid; gap: calc(var(--font-size-base) * .5); }
+    #tarot-table-__BOARD_ID__ [hidden] { display: none !important; }
+    @media (max-width: 680px) { #tarot-table-__BOARD_ID__ .tarot-grid { grid-template-columns: repeat(10, minmax(0, 1fr)); } }
+    @media (max-width: 520px) { #tarot-table-__BOARD_ID__ .tarot-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+    @media (prefers-reduced-motion: reduce) { #tarot-table-__BOARD_ID__ .tarot-flip-inner { transition: none; } }
+  </style>
+  <div class="tarot-heading">
+    <h3>维特塔罗</h3>
+    <div class="text-small text-muted" data-deck-label>经典牌面 · 随机正逆位</div>
+  </div>
+  <div class="tarot-theme" data-theme-field>
+    <label class="form-label" for="tarot-theme-__BOARD_ID__">问题方向（选填）</label>
+    <input class="form-control" id="tarot-theme-__BOARD_ID__" data-theme type="text" maxlength="100" placeholder="例如：感情、工作、学业">
+  </div>
+  <div data-theme-fixed hidden></div>
+  <div data-progress aria-live="polite"></div>
+  <div class="tarot-prior" data-prior hidden>
+    <div class="text-small text-muted">已经抽出的牌</div>
+    <div class="tarot-gallery" data-prior-gallery></div>
+  </div>
+  <div class="tarot-gallery" data-reveals aria-label="已翻开的牌" hidden></div>
+  <div class="tarot-grid" data-grid data-stage="waiting" role="group" aria-label="背面朝上的塔罗牌"></div>
+  <div class="tarot-actions" data-actions>
+    <button class="btn btn-primary" type="button" data-confirm disabled>确认并翻牌</button>
+    <button class="btn btn-ghost" type="button" data-resend hidden>再次发送这组牌</button>
+    <span class="text-small text-muted" data-hint>确认前可点回取消。</span>
+  </div>
+  <div class="text-small" data-message aria-live="polite" hidden></div>
+  <div class="tarot-fallback" data-fallback hidden>
+    <label class="form-label" for="tarot-request-__BOARD_ID__">将这段抽牌信息发送到对话</label>
+    <textarea class="form-control" id="tarot-request-__BOARD_ID__" data-request rows="5" readonly></textarea>
+    <div class="tarot-actions">
+      <button class="btn" type="button" data-copy>复制抽牌信息</button>
+      <button class="btn btn-ghost" type="button" data-retry>再次尝试发送</button>
+    </div>
+  </div>
+  <script type="application/json" data-config>__TAROT_PUBLIC_CONFIG__</script>
+  <script>
+    (() => {
+      const root = document.getElementById('tarot-table-__BOARD_ID__');
+      if (!root) return;
+      const config = JSON.parse(root.querySelector('[data-config]').textContent);
+      const grid = root.querySelector('[data-grid]');
+      const progress = root.querySelector('[data-progress]');
+      const confirmButton = root.querySelector('[data-confirm]');
+      const resendButton = root.querySelector('[data-resend]');
+      const themeInput = root.querySelector('[data-theme]');
+      const message = root.querySelector('[data-message]');
+      const fallback = root.querySelector('[data-fallback]');
+      const request = root.querySelector('[data-request]');
+      const reveals = root.querySelector('[data-reveals]');
+      const available = new Set(config.available_slots);
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const wait = duration => new Promise(resolve => setTimeout(resolve, duration));
+      const frame = () => new Promise(resolve => requestAnimationFrame(resolve));
+      let selected = [];
+      let locked = config.status === 'complete';
+      let arranging = false;
+      let revealing = false;
+      let pending = false;
+      let delivery = 'idle';
+      let shownCards = config.completed_cards.slice();
+      let decodedDeck = null;
+      let startupAnimations = [];
+      let startupToken = 0;
+      const theme = config.theme_label === '未指定' ? '' : config.theme_label;
+      const hasFixedTheme = Boolean(theme);
+      themeInput.value = theme;
+      if (hasFixedTheme) {
+        root.querySelector('[data-theme-field]').hidden = true;
+        root.querySelector('[data-theme-fixed]').hidden = false;
+        root.querySelector('[data-theme-fixed]').textContent = '问题方向：' + theme;
+      }
+      if (config.orientation_mode === 'upright-only') root.querySelector('[data-deck-label]').textContent = '经典牌面 · 仅正位';
+      function currentTheme() { return hasFixedTheme ? config.theme_label : themeInput.value.trim(); }
+      function chineseCount(number) {
+        const digits = ['零','一','二','三','四','五','六','七','八','九'];
+        if (number < 10) return digits[number];
+        if (number < 20) return '十' + (number % 10 ? digits[number % 10] : '');
+        return digits[Math.floor(number / 10)] + '十' + (number % 10 ? digits[number % 10] : '');
+      }
+      function showMessage(text, error = false) {
+        message.hidden = !text; message.textContent = text;
+        message.setAttribute('role', error ? 'alert' : 'status');
+      }
+      function save() {
+        const host = window.openai;
+        if (!host || typeof host.setWidgetState !== 'function') return;
+        const publicSelection = { session_id: config.session_id, session_filename: config.session_filename, commitment: config.commitment, round_id: config.round_id, view_id: config.view_id, clarifier_round: config.clarifier_round, chosen_numbers: selected.slice(), theme_direction: currentTheme(), selection_confirmed: locked, shown_cards: shownCards.map(card => ({ card_id: card.card_id, orientation: card.reversed ? 'reversed' : 'upright' })) };
+        const snapshot = { modelContent: publicSelection, privateContent: { version: 2, session_id: config.session_id, commitment: config.commitment, round_id: config.round_id, view_id: config.view_id, selected: selected.slice(), locked, phase: locked ? 'revealed' : 'choosing', delivery, theme: currentTheme() } };
+        try { Promise.resolve(host.setWidgetState(snapshot)).catch(() => {}); } catch (_) {}
+      }
+      async function decodeDeck() {
+        if (decodedDeck) return decodedDeck;
+        const packet = config.deck_payload;
+        let jsonText;
+        if (typeof DecompressionStream === 'function' && typeof Blob === 'function') {
+          try {
+            const bytes = Uint8Array.from(atob(packet.data), character => character.charCodeAt(0));
+            const reader = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate')).getReader();
+            const chunks = []; let length = 0;
+            while (true) { const item = await reader.read(); if (item.done) break; chunks.push(item.value); length += item.value.length; }
+            const combined = new Uint8Array(length); let offset = 0;
+            for (const chunk of chunks) { combined.set(chunk, offset); offset += chunk.length; }
+            jsonText = new TextDecoder().decode(combined);
+          } catch (_) { jsonText = atob(packet.fallback); }
+        } else jsonText = atob(packet.fallback);
+        const deck = JSON.parse(jsonText);
+        if (!Array.isArray(deck) || deck.length !== 78 || new Set(deck.map(card => card[0])).size !== 78 || deck.some(card => !Array.isArray(card) || card.length !== 2 || !Object.prototype.hasOwnProperty.call(config.catalog, card[0]) || (card[1] !== 0 && card[1] !== 1))) throw new Error('invalid deck');
+        decodedDeck = deck; return deck;
+      }
+      function figureFor(card, flipped) {
+        const info = config.catalog[card.card_id];
+        const figure = document.createElement('figure'); figure.className = 'tarot-reveal-card';
+        figure.setAttribute('aria-label', info.name + '，' + (card.reversed ? '逆位' : '正位'));
+        const flip = document.createElement('div'); flip.className = 'tarot-flip';
+        const inner = document.createElement('div'); inner.className = 'tarot-flip-inner' + (flipped ? ' is-flipped' : '');
+        const back = document.createElement('img'); back.className = 'tarot-face'; back.src = config.back_image; back.alt = '';
+        const front = document.createElement('img'); front.className = 'tarot-face tarot-front' + (card.reversed ? ' is-reversed' : ''); front.src = info.image; front.alt = '';
+        inner.append(back, front); flip.appendChild(inner);
+        const caption = document.createElement('figcaption');
+        const name = document.createElement('span'); name.textContent = info.name;
+        const orientation = document.createElement('span'); orientation.className = 'text-small text-muted'; orientation.textContent = card.reversed ? '逆位' : '正位';
+        caption.append(name, orientation); figure.append(flip, caption);
+        return { figure, inner };
+      }
+      function showPriorCards() {
+        if (!config.previous_cards.length) return;
+        const prior = root.querySelector('[data-prior]'); const gallery = root.querySelector('[data-prior-gallery]');
+        for (const card of config.previous_cards) gallery.appendChild(figureFor(card, true).figure);
+        prior.hidden = false;
+      }
+      async function displayRevealed(animate) {
+        const deck = await decodeDeck();
+        if (config.status !== 'complete') shownCards = config.current_round_slots.concat(selected).map(slot => ({ slot, card_id: deck[slot - 1][0], reversed: deck[slot - 1][1] === 1 }));
+        reveals.replaceChildren(); const inners = [];
+        for (const card of shownCards) { const result = figureFor(card, !animate || reducedMotion); reveals.appendChild(result.figure); inners.push(result.inner); }
+        reveals.hidden = false; grid.hidden = true;
+        if (animate && !reducedMotion) {
+          await frame(); await frame();
+          inners.forEach((inner, index) => { inner.style.transitionDelay = (index * 110) + 'ms'; inner.classList.add('is-flipped'); });
+          await wait(700 + Math.max(0, inners.length - 1) * 110);
+        }
+      }
+      function stopStartup() {
+        startupToken += 1;
+        for (const animation of startupAnimations) animation.cancel();
+        startupAnimations = [];
+        for (const button of grid.children) button.style.transform = '';
+        arranging = false; grid.dataset.stage = 'spread';
+      }
+      async function restore(snapshot) {
+        if (!snapshot || typeof snapshot !== 'object' || pending || revealing) return false;
+        const state = snapshot.privateContent;
+        if (!state || state.version !== 2 || state.session_id !== config.session_id || state.commitment !== config.commitment || state.round_id !== config.round_id || state.view_id !== config.view_id) return false;
+        if (!Array.isArray(state.selected) || state.selected.length > config.needed || new Set(state.selected).size !== state.selected.length || state.selected.some(slot => !Number.isInteger(slot) || !available.has(slot))) return false;
+        if (locked && (!state.locked || JSON.stringify(selected) !== JSON.stringify(state.selected))) return false;
+        if (state.locked && state.selected.length !== config.needed) return false;
+        stopStartup(); selected = state.selected.slice(); locked = Boolean(state.locked);
+        delivery = locked && state.delivery === 'requested' ? 'requested' : 'idle';
+        if (!hasFixedTheme && typeof state.theme === 'string') themeInput.value = state.theme.slice(0, 100);
+        if (locked) {
+          try { await displayRevealed(false); showMessage('这组牌已翻开并锁定，可继续发送解读。'); }
+          catch (_) { showMessage('这组牌已锁定，可发送到对话继续翻牌解读。', true); }
+        }
+        render(); return true;
+      }
+      function render() {
+        root.dataset.phase = arranging ? 'shuffling' : revealing ? 'revealing' : locked ? 'revealed' : 'choosing';
+        progress.textContent = arranging ? (config.clarifier_round ? '正在整理余牌，稍后凭直觉选牌…' : '正在洗牌，稍后凭直觉选牌…') : revealing ? '正在翻开你选中的牌…' : locked ? '这些是你抽到的牌' : selected.length === config.needed ? '已选好，准备翻牌' : '请凭直觉选' + chineseCount(config.needed) + '张牌';
+        for (const button of grid.children) {
+          const slot = Number(button.dataset.slot); const picked = selected.includes(slot); const used = !available.has(slot);
+          button.setAttribute('aria-pressed', picked ? 'true' : 'false'); button.dataset.used = String(used);
+          button.disabled = used || locked || arranging || revealing || (!picked && selected.length >= config.needed);
+          button.setAttribute('aria-label', used ? '已经抽走的牌' : picked ? '已选中的背面牌，点击取消' : '背面朝上的牌，点击选择');
+        }
+        themeInput.disabled = locked || config.status === 'complete';
+        confirmButton.disabled = config.status === 'complete' || selected.length !== config.needed || pending || arranging || revealing || locked;
+        confirmButton.hidden = locked; resendButton.hidden = !locked || config.status === 'complete' || revealing; resendButton.disabled = pending;
+        resendButton.textContent = pending ? '正在打开确认…' : delivery === 'requested' ? '再次发送这组牌' : '发送这组牌并解读';
+        root.querySelector('[data-hint]').textContent = locked ? '选牌已锁定，牌序保持不变。' : '确认前可点回取消。';
+      }
+      function promptText() {
+        const data = { session_id: config.session_id, session_filename: config.session_filename, commitment: config.commitment, round_id: config.round_id, view_id: config.view_id, clarifier_round: config.clarifier_round, spread: config.spread, chosen_numbers: selected.slice(), theme_direction: currentTheme() || '未指定', shown_cards: shownCards.filter(card => selected.includes(card.slot)).map(card => ({ number: card.slot, card_id: card.card_id, orientation: card.reversed ? 'reversed' : 'upright' })) };
+        return '请使用 $rider-waite-tarot 继续这次占卜。我已经确认并翻开这些牌。请核对场次、牌序校验值与轮次，沿用保存的原牌序执行抽牌；若同一组已提交则直接继续解读，勿重复抽取。界面牌图仅作预览，请以引擎状态核验。以建议为主，简要解释牌面，只使用问题方向，具体问题留在我心里。\n' + JSON.stringify(data, null, 2);
+      }
+      async function sendSelection() {
+        if (pending || revealing || !locked || selected.length !== config.needed || config.status === 'complete') return;
+        pending = true; fallback.hidden = true; render(); showMessage('正在打开解读请求，请完成发送确认。');
+        try {
+          if (!window.openai || typeof window.openai.sendFollowUpMessage !== 'function') throw new Error('unavailable');
+          await window.openai.sendFollowUpMessage({ prompt: promptText(), title: '发送这组牌并继续解读' });
+          delivery = 'requested'; showMessage('解读请求已交给对话，请查看并完成发送确认。');
+        } catch (_) {
+          delivery = 'failed'; request.value = promptText(); fallback.hidden = false;
+          showMessage('牌已保留。可复制下方信息发送到对话，或再次尝试。', true);
+        } finally { pending = false; save(); render(); }
+      }
+      async function confirmSelection() {
+        if (pending || locked || arranging || selected.length !== config.needed || config.status === 'complete') return;
+        locked = true; revealing = true; save(); render();
+        try { await displayRevealed(true); }
+        catch (_) { showMessage('选牌已锁定。可发送到对话继续查看牌面和解读。', true); }
+        revealing = false; save(); render(); await sendSelection();
+      }
+      async function startShuffle() {
+        if (reducedMotion || typeof grid.children[0]?.animate !== 'function') { grid.dataset.stage = 'spread'; render(); return; }
+        arranging = true; render(); await frame();
+        const token = ++startupToken; const table = grid.getBoundingClientRect();
+        const middleX = table.left + table.width / 2; const middleY = table.top + table.height / 2;
+        startupAnimations = [];
+        for (const [index, button] of Array.from(grid.children).entries()) {
+          const rect = button.getBoundingClientRect();
+          const offsetX = middleX - rect.left - rect.width / 2 + (index % 7 - 3) * .7;
+          const offsetY = middleY - rect.top - rect.height / 2 + (index % 5 - 2) * .7;
+          const angle = (index % 5 - 2) * .7; const direction = index % 2 ? 1 : -1; const spread = Math.min(table.width * .24, 140);
+          const stack = 'translate(' + offsetX + 'px,' + offsetY + 'px) rotate(' + angle + 'deg)'; button.style.transform = stack;
+          const animation = button.animate([
+            { transform: stack, offset: 0 }, { transform: stack, offset: .12 },
+            { transform: 'translate(' + (offsetX + direction * spread) + 'px,' + (offsetY - 12 + index % 4 * 5) + 'px) rotate(' + direction * 11 + 'deg)', offset: .29 },
+            { transform: stack, offset: .43 },
+            { transform: 'translate(' + (offsetX - direction * spread * .8) + 'px,' + (offsetY + 8 - index % 4 * 4) + 'px) rotate(' + (-direction * 9) + 'deg)', offset: .58 },
+            { transform: stack, offset: .72 }, { transform: 'translate(0px,0px) rotate(0deg)', offset: 1 }
+          ], { duration: 3300, delay: index * 3, easing: 'cubic-bezier(.25,.6,.25,1)', fill: 'both' });
+          startupAnimations.push(animation);
+        }
+        grid.dataset.stage = 'shuffling';
+        await Promise.allSettled(startupAnimations.map(animation => animation.finished));
+        if (token !== startupToken) return;
+        stopStartup(); render();
+      }
+      for (let slot = 1; slot <= 78; slot += 1) {
+        const button = document.createElement('button'); button.type = 'button'; button.className = 'tarot-card cursor-interaction'; button.dataset.slot = String(slot);
+        const back = document.createElement('img'); back.src = config.back_image; back.alt = ''; back.draggable = false; button.appendChild(back);
+        button.addEventListener('click', () => {
+          if (locked || arranging || !available.has(slot)) return;
+          const index = selected.indexOf(slot);
+          if (index >= 0) selected.splice(index, 1); else if (selected.length < config.needed) selected.push(slot);
+          showMessage(''); render(); save();
+        });
+        grid.appendChild(button);
+      }
+      confirmButton.addEventListener('click', confirmSelection); resendButton.addEventListener('click', sendSelection);
+      root.querySelector('[data-retry]').addEventListener('click', sendSelection);
+      root.querySelector('[data-copy]').addEventListener('click', async () => {
+        try {
+          if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') throw new Error('unavailable');
+          await navigator.clipboard.writeText(request.value); showMessage('已复制。粘贴并发送到对话即可。');
+        } catch (_) { request.focus(); request.select(); showMessage('请手动复制已选中的信息，再发送到对话。'); }
+      });
+      themeInput.addEventListener('input', () => { if (!locked) save(); });
+      window.addEventListener('openai:set_globals', event => { if (event.detail && event.detail.globals && Object.prototype.hasOwnProperty.call(event.detail.globals, 'widgetState')) restore(event.detail.globals.widgetState); });
+      showPriorCards(); render();
+      (async () => {
+        if (config.status === 'complete') { grid.hidden = true; root.querySelector('[data-actions]').hidden = true; await displayRevealed(false); render(); return; }
+        const restored = await restore(window.openai && window.openai.widgetState);
+        if (!restored) await startShuffle();
+      })();
+    })();
+  </script>
+</section>
